@@ -1,38 +1,54 @@
-'use client';
+'use client'
 
-import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 type Problem = {
-  id: string;
-  title: string;
-  description: string;
-  difficulty: string;
-};
+  id: string
+  title: string
+  description: string
+  difficulty: string
+}
 
 export default function ProblemPage() {
-  const { id } = useParams();
-  const [problem, setProblem] = useState<Problem | null>(null);
-  const [code, setCode] = useState('');
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [score, setScore] = useState<number | null>(null);
-  const [results, setResults] = useState<any[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { id } = useParams()
+  const router = useRouter()
+  const [problem, setProblem] = useState<Problem | null>(null)
+  const [code, setCode] = useState('')
+  const [feedback, setFeedback] = useState('')
+  const [score, setScore] = useState<number | null>(null)
+  const [correction, setCorrection] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [generatingCorrection, setGeneratingCorrection] = useState(false)
+  const [showCorrectionButton, setShowCorrectionButton] = useState(false)
 
   useEffect(() => {
     fetch('/data/problems.json')
       .then(res => res.json())
       .then((data: Problem[]) => {
-        const p = data[parseInt(id as string)];
-        setProblem(p);
-      });
-  }, [id]);
+        const p = data[parseInt(id as string)]
+        setProblem(p)
+      })
+      .catch(err => console.error('Failed to load problem:', err))
+  }, [id])
+
+const animateText = (text: string, setter: (val: string) => void) => {
+  let i = 0
+  setter('') // clear previous
+  const interval = setInterval(() => {
+    setter(text.slice(0, i + 1)) // ✅ fixed
+    i++
+    if (i >= text.length) clearInterval(interval)
+  }, 20)
+}
+
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setFeedback(null);
-    setScore(null);
-    setResults(null);
+    setLoading(true)
+    setFeedback('')
+    setCorrection('')
+    setShowCorrectionButton(false)
+    setScore(null)
 
     try {
       const res = await fetch('http://127.0.0.1:8000/submit/', {
@@ -42,77 +58,109 @@ export default function ProblemPage() {
           problem_id: parseInt(id as string),
           student_code: code
         })
-      });
+      })
 
-      if (!res.ok) {
-        const err = await res.text();
-        alert(`Error: ${err}`);
-        return;
-      }
+      const data = await res.json()
+      setScore(data.score)
+      animateText(data.feedback, setFeedback)
 
-      const data = await res.json();
-      setScore(data.score);
-      setFeedback(data.feedback);
-      setResults(data.results);
+      if (data.score < 100) setShowCorrectionButton(true)
     } catch (err) {
-      alert('⚠️ Cannot reach backend.');
-      console.error(err);
+      alert('⚠️ Cannot reach backend.')
+      console.error(err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  if (!problem) return <div className="p-6">Loading...</div>;
+  const fetchCorrection = async () => {
+    setGeneratingCorrection(true)
+    setCorrection('')
+
+    try {
+      const res = await fetch('http://127.0.0.1:8000/correction/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          problem_id: parseInt(id as string),
+          student_code: code
+        })
+      })
+
+      const data = await res.json()
+      animateText(data.correction, setCorrection)
+    } catch (err) {
+      setCorrection('❌ Failed to generate correction.')
+      console.error(err)
+    } finally {
+      setGeneratingCorrection(false)
+    }
+  }
+
+  const goBack = () => router.push('/problems?returning=true')
+
+  if (!problem) return <div>Loading...</div>
 
   return (
     <main className="min-h-screen p-6 bg-white">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-blue-800 mb-1">{problem.title}</h1>
-        <p className="text-sm text-blue-600 mb-4">Difficulty: {problem.difficulty}</p>
-        <pre className="bg-blue-50 p-4 rounded border border-blue-100 text-gray-800 text-sm whitespace-pre-wrap mb-4 max-h-60 overflow-auto">
+        <button onClick={goBack} className="mb-6 text-blue-600 font-medium">← Back to Problems</button>
+
+        <h1 className="text-2xl font-bold text-blue-800">{problem.title}</h1>
+        <p className="text-sm text-blue-600 mb-2">Difficulty: {problem.difficulty}</p>
+
+        <pre className="bg-blue-50 p-4 rounded mb-4 border border-blue-100 whitespace-pre-wrap">
           {problem.description}
         </pre>
 
         <textarea
-          placeholder="Write your solution here..."
           value={code}
           onChange={e => setCode(e.target.value)}
-          className="w-full h-[400px] p-4 border border-blue-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Write your code here..."
+          className="w-full h-[400px] p-4 border border-blue-300 rounded font-mono text-sm"
+          spellCheck={false} // 🔴 removes red lines
         />
 
         <button
           onClick={handleSubmit}
-          className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg text-base"
           disabled={loading}
+          className="mt-4 bg-blue-600 text-white px-6 py-2 rounded disabled:opacity-50"
         >
-          {loading ? '⏳ Submitting...' : 'Submit Solution'}
+          {loading ? 'Submitting...' : 'Submit Solution'}
         </button>
 
         {score !== null && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded text-green-800">
-            <strong>✅ Score:</strong> {score}%
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded">
+            <strong>Score:</strong> {score}%
           </div>
         )}
 
         {feedback && (
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded text-yellow-900 whitespace-pre-line">
-            <strong>🧠 Feedback:</strong> {feedback}
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded whitespace-pre-line">
+            <strong>Feedback:</strong>
+            <br />
+            {feedback}
           </div>
         )}
 
-        {results && (
+        {showCorrectionButton && (
           <div className="mt-4">
-            <h3 className="font-semibold text-lg mb-2">🧪 Test Results:</h3>
-            <ul className="list-disc pl-6 text-sm text-gray-800">
-              {results.map((r, i) => (
-                <li key={i}>
-                  {r.passed ? '✅' : '❌'} Test {i + 1}: input = <code>{r.input}</code>, expected = <code>{r.expected}</code>, got = <code>{r.actual}</code>
-                </li>
-              ))}
-            </ul>
+            <button
+              onClick={fetchCorrection}
+              disabled={generatingCorrection}
+              className="text-blue-600 underline"
+            >
+              {generatingCorrection ? 'Generating correction...' : '🛠️ Show Suggested Correction'}
+            </button>
           </div>
+        )}
+
+        {correction && (
+          <pre className="mt-4 bg-gray-100 p-4 border rounded whitespace-pre-wrap text-sm">
+            {correction}
+          </pre>
         )}
       </div>
     </main>
-  );
+  )
 }

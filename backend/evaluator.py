@@ -1,51 +1,59 @@
+import os
 import json
-import builtins
+import traceback
+from typing import List
 
-def safe_exec(code: str, globals=None):
-    exec(code, globals)
+# Dynamically compute the absolute path to problems.json
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+problems_path = os.path.join(BASE_DIR, '..', 'frontend', 'public', 'data', 'problems.json')
 
-def evaluate_code(problem_id: int, student_code: str):
-    with open("problems.json", "r", encoding="utf-8") as f:
-        problems = json.load(f)
+def evaluate_code(problem_id: int, student_code: str) -> dict:
+    try:
+        with open(problems_path, "r", encoding="utf-8") as f:
+            problems = json.load(f)
 
-    prob = problems[problem_id]
-    tests = prob["tests"]
-    passed = 0
-    results = []
+        problem = problems[problem_id]
+        tests = problem.get("tests", [])
+        description = problem.get("description", "")
 
-    for t in tests:
-        input_data = t["input"]
-        expected = t["output"]
+        passed_count = 0
+        results = []
 
-        # Safe globals to prevent leaking state
-        globals_dict = {}
-        try:
-            safe_exec(student_code + "\nresult = main" + input_data, globals_dict)
-            actual = str(globals_dict["result"])
-            test_pass = (actual == expected)
-        except Exception as e:
-            actual = f"Error: {str(e)}"
-            test_pass = False
+        for test in tests:
+            try:
+                expected = eval(test["output"])
+                local_env = {}
+                exec(student_code, {}, local_env)
+                func = list(local_env.values())[0]
+                actual = func(*eval(test["input"]))
+                passed = actual == expected
+            except Exception as e:
+                actual = f"Error: {e}"
+                passed = False
 
-        results.append({
-            "input": input_data,
-            "expected": expected,
-            "actual": actual,
-            "passed": test_pass
-        })
+            results.append({
+                "input": test["input"],
+                "expected": test["output"],
+                "actual": str(actual),
+                "passed": passed
+            })
 
-        if test_pass:
-            passed += 1
+            if passed:
+                passed_count += 1
 
-    score = int(passed / len(tests) * 100)
-    feedback = (
-        "Excellent work!" if score == 100
-        else "Your code fails on some test cases. Try to debug it."
-    )
+        score = int((passed_count / len(tests)) * 100) if tests else 0
 
-    return {
-        "score": score,
-        "feedback": feedback,
-        "results": results,
-        "description": prob["description"]
-    }
+        return {
+            "score": score,
+            "results": results,
+            "description": description
+        }
+
+    except Exception as e:
+        return {
+            "score": 0,
+            "results": [],
+            "description": "",
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }
