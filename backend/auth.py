@@ -1,41 +1,42 @@
-# backend/auth.py
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Dict
+from fastapi import APIRouter, Request, HTTPException, Depends
+from firebase_admin import auth as firebase_auth, firestore
+
 
 router = APIRouter()
 
-# Simulated in-memory DB (replace with Firebase or DB later)
-users_db: Dict[str, str] = {
-    "test@test.com": "123456"  # ✅ Valid test user
-}
+def verify_token(request: Request):
+    auth_header = request.headers.get("Authorization")
+    print("🔍 Received header:", auth_header)  # DEBUG
 
-class AuthRequest(BaseModel):
-    email: str
-    password: str
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="No auth token")
 
-class LoginData(BaseModel):
-    email: str
-    password: str
+    token = auth_header.split(" ")[1]
+    print("🔐 Verifying token:", token[:30], "...")  # DEBUG
 
-class ResetRequest(BaseModel):
-    email: str
+    try:
+        decoded_token = firebase_auth.verify_id_token(token)
+        print("✅ Token verified:", decoded_token)
+        return decoded_token
+    except Exception as e:
+        print("❌ Invalid token:", e)
+        raise HTTPException(status_code=403, detail="Invalid token")
 
-@router.post("/signup")
-def signup(data: AuthRequest):
-    if data.email in users_db:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    users_db[data.email] = data.password
-    return {"message": "✅ Signed up successfully"}
+@router.get("/get-role")
+def get_role(decoded_token=Depends(verify_token)):
+    db = firestore.client()
+    uid = decoded_token["uid"]
+    doc = db.collection("users").document(uid).get()
 
-@router.post("/login")
-def login(data: LoginData):
-    if users_db.get(data.email) == data.password:
-        return {"message": "✅ Login successful"}
-    raise HTTPException(status_code=401, detail="❌ Invalid credentials")
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="User not found")
 
-@router.post("/reset-password")
-def reset_password(data: ResetRequest):
-    if data.email not in users_db:
-        raise HTTPException(status_code=404, detail="Email not found")
-    return {"message": "📧 Simulated password reset sent to your email"}
+    role = doc.to_dict().get("role")
+    if not role:
+        raise HTTPException(status_code=400, detail="Unknown role")
+
+    return {"role": role}
+
+
+
+

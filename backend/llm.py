@@ -1,12 +1,12 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-import torch # type: ignore
+import torch
+import difflib
 
 MODEL_NAME = "deepseek-ai/deepseek-coder-1.3b-instruct"
 
 print("⏳ Loading model...")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 print(f"Device set to: {device}")
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, trust_remote_code=True)
@@ -26,12 +26,77 @@ pipe = pipeline(
 print("✅ Model loaded successfully!")
 
 def call_deepseek(prompt: str, max_tokens: int = 512) -> str:
-    formatted_prompt = f"<|user|>\n{prompt.strip()}\n<|assistant|>\n"
-    output = pipe(
-        formatted_prompt,
-        max_new_tokens=max_tokens,
-        temperature=0.2,
-        do_sample=True,
-        top_p=0.9,
-    )
-    return output[0]["generated_text"].split("<|assistant|>")[-1].strip()
+    print(f"[Mocked LLM] Prompt received:\n{prompt[:200]}...\n")
+    
+    # Return dummy/fake output (you can customize this)
+    if "Execute the following code" in prompt:
+        return "42"  # example for mocked test output
+    elif "write a correct" in prompt or "Only return the raw code" in prompt:
+        return "def solve():\n    print(42)"  # dummy ideal code
+    else:
+        return "Mocked response"
+
+
+def evaluate_code_with_tests(code: str, test_cases: list[dict]) -> dict:
+    output_log = ""
+    passed = 0
+
+    for i, test in enumerate(test_cases):
+        prompt = f"""You are a execution engine. 
+Execute the following code and return only the output, assuming the input is:
+
+Input:
+{test['input']}
+
+Code:
+{code}
+
+Only return the raw output with no explanation.
+"""
+
+        try:
+            llm_output = call_deepseek(prompt, max_tokens=256).strip()
+        except Exception as e:
+            llm_output = f"Error: {str(e)}"
+
+        expected = test['output'].strip()
+        actual = llm_output.strip()
+
+        if expected == actual:
+            passed += 1
+
+        output_log += f"Test {i+1}:\nInput: {test['input']}\nExpected: {expected}\nLLM Output: {actual}\n\n"
+
+    # Step: Generate ideal code using LLM
+    generate_prompt = f"""Given the following test cases, write a correct  function that satisfies them:
+
+Test Cases:
+{test_cases}
+
+Only return the raw  code."""
+
+    ideal_code = call_deepseek(generate_prompt, max_tokens=512)
+
+    similarity = calculate_similarity(code, ideal_code)
+    total = len(test_cases)
+    tests_score = (passed / total) if total else 0
+    final_score = round((0.7 * tests_score + 0.3 * similarity) * 20, 2)
+
+    return {
+        "output_log": output_log.strip(),
+        "passed": passed,
+        "total": total,
+        "score": final_score,
+        "similarity": similarity,
+        "ideal_code": ideal_code,
+    }
+
+
+
+
+def calculate_similarity(code1: str, code2: str) -> float:
+    """
+    Returns a float in range [0, 1] indicating how similar code1 and code2 are.
+    """
+    return difflib.SequenceMatcher(None, code1.strip(), code2.strip()).ratio()
+

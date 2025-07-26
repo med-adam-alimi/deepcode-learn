@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 type Problem = {
@@ -13,6 +13,7 @@ type Problem = {
 export default function ProblemPage() {
   const { id } = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [problem, setProblem] = useState<Problem | null>(null)
   const [code, setCode] = useState('')
   const [feedback, setFeedback] = useState('')
@@ -23,25 +24,33 @@ export default function ProblemPage() {
   const [showCorrectionButton, setShowCorrectionButton] = useState(false)
 
   useEffect(() => {
-    fetch('/data/problems.json')
-      .then(res => res.json())
+    const lang = searchParams.get('lang') || 'python'
+    const filePath = `/data/${lang}_problems.json`
+
+    fetch(filePath)
+      .then(res => {
+        if (!res.ok) throw new Error(`Failed to load ${filePath}`)
+        return res.json()
+      })
       .then((data: Problem[]) => {
         const p = data[parseInt(id as string)]
         setProblem(p)
       })
-      .catch(err => console.error('Failed to load problem:', err))
-  }, [id])
+      .catch(err => {
+        console.error('❌ Failed to load problem:', err)
+        alert('Could not load problem. Please check the language and ID.')
+      })
+  }, [id, searchParams])
 
-const animateText = (text: string, setter: (val: string) => void) => {
-  let i = 0
-  setter('') // clear previous
-  const interval = setInterval(() => {
-    setter(text.slice(0, i + 1)) // ✅ fixed
-    i++
-    if (i >= text.length) clearInterval(interval)
-  }, 20)
-}
-
+  const animateText = (text: string, setter: (val: string) => void) => {
+    let i = 0
+    setter('')
+    const interval = setInterval(() => {
+      setter(text.slice(0, i + 1))
+      i++
+      if (i >= text.length) clearInterval(interval)
+    }, 20)
+  }
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -97,7 +106,10 @@ const animateText = (text: string, setter: (val: string) => void) => {
     }
   }
 
-  const goBack = () => router.push('/problems?returning=true')
+  const goBack = () => {
+    const lang = searchParams.get('lang') || 'python'
+    router.push(`/problems?lang=${lang}`)
+  }
 
   if (!problem) return <div>Loading...</div>
 
@@ -118,7 +130,7 @@ const animateText = (text: string, setter: (val: string) => void) => {
           onChange={e => setCode(e.target.value)}
           placeholder="Write your code here..."
           className="w-full h-[400px] p-4 border border-blue-300 rounded font-mono text-sm"
-          spellCheck={false} // 🔴 removes red lines
+          spellCheck={false}
         />
 
         <button
