@@ -60,19 +60,19 @@ export default function ProblemPage() {
     setScore(null)
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/submit/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          problem_id: parseInt(id as string),
-          student_code: code
-        })
-      })
+     const res = await fetch('http://127.0.0.1:8000/submit/', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    problem_id: parseInt(id as string),
+    student_code: code,
+    language: searchParams.get('lang') || 'python'
+  })
+})
 
       const data = await res.json()
       setScore(data.score)
       animateText(data.feedback, setFeedback)
-
       if (data.score < 100) setShowCorrectionButton(true)
     } catch (err) {
       alert('⚠️ Cannot reach backend.')

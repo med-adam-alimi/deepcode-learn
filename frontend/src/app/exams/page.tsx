@@ -58,7 +58,7 @@ export default function ExamsPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || 'Failed to submit')
 
-      setMessage(`✅ You scored ${data.score}/${data.total}`)
+      setMessage(`✅ You scored ${data.score}/100 (Similarity: ${Math.round(data.similarity * 100)}%)`)
       setOutputLog(data.output)
     } catch (err: any) {
       setMessage(`❌ ${err.message || 'Submission failed'}`)

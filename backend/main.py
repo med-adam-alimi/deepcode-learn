@@ -5,6 +5,8 @@ from auth import router as auth_router
 import firebase_admin
 from firebase_admin import credentials
 from exam import router as exam_router
+from submit import router as submit_router
+from correction import router as correction_router
 
 
 
@@ -15,6 +17,9 @@ firebase_admin.initialize_app(cred)
 app = FastAPI()
 app.include_router(auth_router)
 app.include_router(exam_router)
+app.include_router(submit_router)
+app.include_router(correction_router)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,4 +28,5 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 

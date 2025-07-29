@@ -63,16 +63,15 @@ def get_exams(request: Request):
 def submit_exam(submission: ExamSubmission, decoded_token=Depends(verify_token)):
     db = firestore.client()
 
-    # 🔍 Get test cases for this exam
     exam_doc = db.collection("exams").document(submission.exam_id).get()
     if not exam_doc.exists:
         raise HTTPException(status_code=404, detail="Exam not found")
 
     test_cases = exam_doc.to_dict().get("tests", [])
 
-    # ✅ Evaluate using DeepSeek
+    # ✅ Evaluate using DeepSeek - NO FEEDBACK, equal test+similarity weight
     from llm import evaluate_code_with_tests
-    result = evaluate_code_with_tests(submission.code, test_cases)
+    result = evaluate_code_with_tests(submission.code, test_cases, weight_tests=0.5, weight_similarity=0.5, feedback=False)
 
     submission_data = submission.dict()
     submission_data["submitted_at"] = datetime.utcnow().isoformat()
