@@ -82,29 +82,31 @@ export default function ProblemPage() {
     }
   }
 
-  const fetchCorrection = async () => {
-    setGeneratingCorrection(true)
-    setCorrection('')
+const fetchCorrection = async () => {
+  setGeneratingCorrection(true)
+  setCorrection('')
 
-    try {
-      const res = await fetch('http://127.0.0.1:8000/correction/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          problem_id: parseInt(id as string),
-          student_code: code
-        })
+  try {
+    const res = await fetch('http://127.0.0.1:8000/correction/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        problem_id: parseInt(id as string),
+        student_code: code,
+        language: searchParams.get('lang') || 'python',
+        problem_context: problem?.description || ''
       })
+    })
 
-      const data = await res.json()
-      animateText(data.correction, setCorrection)
-    } catch (err) {
-      setCorrection('❌ Failed to generate correction.')
-      console.error(err)
-    } finally {
-      setGeneratingCorrection(false)
-    }
+    const data = await res.json()
+    animateText(data.correction, setCorrection)
+  } catch (err) {
+    setCorrection('❌ Failed to generate correction.')
+    console.error(err)
+  } finally {
+    setGeneratingCorrection(false)
   }
+}
 
   const goBack = () => {
     const lang = searchParams.get('lang') || 'python'
@@ -121,7 +123,7 @@ export default function ProblemPage() {
         <h1 className="text-2xl font-bold text-blue-800">{problem.title}</h1>
         <p className="text-sm text-blue-600 mb-2">Difficulty: {problem.difficulty}</p>
 
-        <pre className="bg-blue-50 p-4 rounded mb-4 border border-blue-100 whitespace-pre-wrap">
+        <pre className="bg-blue-50 p-4 rounded mb-4 border border-blue-100 whitespace-pre-wrap text-black">
           {problem.description}
         </pre>
 
@@ -129,7 +131,7 @@ export default function ProblemPage() {
           value={code}
           onChange={e => setCode(e.target.value)}
           placeholder="Write your code here..."
-          className="w-full h-[400px] p-4 border border-blue-300 rounded font-mono text-sm"
+          className="w-full h-[400px] p-4 border border-blue-300 rounded font-mono text-sm text-black"
           spellCheck={false}
         />
 
@@ -142,13 +144,13 @@ export default function ProblemPage() {
         </button>
 
         {score !== null && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded">
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded text-black">
             <strong>Score:</strong> {score}%
           </div>
         )}
 
         {feedback && (
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded whitespace-pre-line">
+          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded whitespace-pre-line text-black">
             <strong>Feedback:</strong>
             <br />
             {feedback}
@@ -168,7 +170,7 @@ export default function ProblemPage() {
         )}
 
         {correction && (
-          <pre className="mt-4 bg-gray-100 p-4 border rounded whitespace-pre-wrap text-sm">
+          <pre className="mt-4 bg-gray-100 p-4 border rounded whitespace-pre-wrap text-sm text-black">
             {correction}
           </pre>
         )}

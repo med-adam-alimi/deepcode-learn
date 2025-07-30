@@ -18,7 +18,11 @@ export default function ProblemsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const lang = params.get("lang") || "python"
+    const lang = params.get("lang")
+    if (!lang) {
+      router.replace("/problems/choose-language")
+      return
+    }
     const filePath = `/data/${lang}_problems.json`
 
     fetch(filePath)
@@ -34,7 +38,7 @@ export default function ProblemsPage() {
         console.error(err)
         alert(`⚠️ Could not load data for ${lang}. Check that /public/data/${lang}_problems.json exists.`)
       })
-  }, [])
+  }, [router])
 
   const scrollToProblem = () => {
     const index = parseInt(input) - 1
@@ -46,7 +50,16 @@ export default function ProblemsPage() {
   }
 
   const goToProblem = (index: number) => {
-    router.push(`/problems/${index}`)
+    const params = new URLSearchParams(window.location.search)
+    const lang = params.get("lang")
+    
+    if (lang) {
+      router.push(`/problems/${index}?lang=${lang}`)
+
+    } else {
+      router.push(`/problems/${index}`)
+
+    }
   }
 
   return (
@@ -92,7 +105,9 @@ export default function ProblemsPage() {
             }}
             className="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow hover:shadow-md transition"
           >
-            <h2 className="text-xl font-bold text-blue-900 mb-2">{problem.title}</h2>
+            <h1 className="text-2xl font-bold text-blue-800">
+  Problem-{problem.id}: {problem.title}
+</h1>
             <p className="text-gray-700 mb-2">{problem.short_description}</p>
             <p className="text-sm text-blue-600 font-semibold mb-4">Difficulty: {problem.difficulty}</p>
             <button

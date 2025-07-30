@@ -58,7 +58,7 @@ export default function ExamsPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || 'Failed to submit')
 
-      setMessage(`✅ You scored ${data.score}/100 (Similarity: ${Math.round(data.similarity * 100)}%)`)
+      setMessage(`✅ You scored ${data.score}/100 `)
       setOutputLog(data.output)
     } catch (err: any) {
       setMessage(`❌ ${err.message || 'Submission failed'}`)
@@ -75,7 +75,7 @@ export default function ExamsPage() {
           <p className="mb-4 text-gray-600">{selected.description}</p>
 
           <textarea
-            className="w-full border p-3 rounded-lg h-64 font-mono text-sm"
+            className="w-full border p-3 rounded-lg h-64 font-mono text-sm text-black"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="✍️ Write your code here..."
@@ -96,7 +96,7 @@ export default function ExamsPage() {
           )}
 
           {outputLog && (
-            <pre className="mt-4 bg-gray-100 p-3 rounded-lg text-sm text-gray-800 whitespace-pre-wrap">
+            <pre className="mt-4 bg-gray-100 p-3 rounded-lg text-sm text-black whitespace-pre-wrap">
               {outputLog}
             </pre>
           )}
