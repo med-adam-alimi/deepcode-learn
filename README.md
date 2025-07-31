@@ -61,8 +61,6 @@ Reduced inference time from 15s to 3s through optimization
 
 Supports 100+ concurrent users with minimal latency
 
-## 🎥 Demo  
-<video src="https://github.com/med-adam-alimi/deepcode-learn/raw/main/demo.mp4" controls width="100%"></video>
 
 🚀 Future Roadmap
 Adaptive learning features based on student performance
