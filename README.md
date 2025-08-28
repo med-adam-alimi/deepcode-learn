@@ -1,94 +1,79 @@
-DeepCodeLearn: AI-Powered Code Generation and Feedback Platform
-📌 Overview
-DeepCodeLearn is an innovative AI-powered platform designed to assist students and educators in computer science education. The platform leverages state-of-the-art Large Language Models (LLMs) to provide real-time code generation, evaluation, and personalized feedback for programming exercises. Developed as part of an internship project at the DES Research Unit in Sfax, Tunisia, this tool integrates modern web technologies with advanced AI techniques to enhance the learning experience.
+# DeepCodeLearn: AI-Powered Code Generation and Feedback Platform
 
-✨ Key Features
-AI-Powered Code Generation: Utilizes DeepSeek-Coder 1.3B LLM for accurate code solutions
+## 📌 Overview
+DeepCodeLearn is an **AI-powered platform** designed to enhance computer science education by providing **automatic code generation, evaluation, and personalized feedback**.  
+The system leverages **Large Language Models (LLMs)** such as **DeepSeek-Coder, CodeLlama, and StarCoder**, applying **fine-tuning, RAG, and prompt engineering** to improve performance in solving programming problems.  
 
-Automated Evaluation: Combines test case validation and code similarity metrics
+Developed as part of a research internship at the **DES Research Unit (Sfax, Tunisia)**.
 
-Intelligent Feedback: Provides contextual suggestions and error explanations
+---
 
-Multi-Language Support: Evaluates code in Python, Java, C++, and C
+## ✨ Key Features
+- **AI-Powered Code Generation** – Default model: **DeepSeek-Coder Instruct 1.3B**, chosen for its balance between accuracy and resource efficiency.  
+- **Iterative Code Refinement** – Generated code is executed and tested; if it fails, the output is looped back into the LLM for correction until all test cases pass.  
+- **Automated Evaluation** – Hybrid scoring with:  
+  - **Test case validation (60%)**  
+  - **Code similarity scoring (40%)** using Python’s `difflib`.  
+- **Intelligent Feedback** – Provides contextual hints, detailed error explanations, and learning-oriented feedback.  
+- **Multi-Language Support** – Evaluates solutions in Python, Java, C++, and C.  
+- **Educator Tools** – Problem creation, progress tracking, and analytics dashboards.  
 
-Educator Tools: Problem creation, student progress tracking, and analytics
+---
 
-Modern Web Architecture: Built with Next.js, FastAPI, and Firebase
+## 🏆 Research Contributions
+- **Model Selection**: Benchmarked 5+ LLMs; selected **DeepSeek-Coder Instruct 1.3B** as the primary model due to its high Pass@1 accuracy and lightweight requirements (<4GB VRAM).  
+- **Fine-Tuning with LoRA**: Experimented with **parameter-efficient fine-tuning** (LoRA) to adapt DeepSeek-Coder for educational tasks.  
+- **RAG Integration**: Used **retrieval-augmented generation (RAG)** to ground the LLM in problem-specific knowledge.  
+- **Prompt Engineering**: Designed dynamic prompts with contextual hints and error descriptions to guide model corrections.  
+- **Iterative Repair Loop**: Implemented a **loop of generation → execution → error feedback → regeneration**, increasing problem-solving success rates.  
+- **Evaluation Innovation**: Hybrid scoring method combining **functional correctness** and **semantic similarity (difflib)** for fairer grading.  
 
-🏆 Core Achievements
-Model Benchmarking: Comprehensive evaluation of LLMs (DeepSeek, CodeLlama, StarCoder)
+---
 
-Advanced Techniques: Implementation of RAG and prompt engineering for improved performance
+## 📊 Performance Highlights
+| Model                  | Pass@1 Accuracy | Inference Speed |
+|------------------------|-----------------|-----------------|
+| **DeepSeek-Coder 1.3B** | **56.18%**      | Fast            |
+| CodeLlama 3B           | 52.00%          | Moderate        |
+| StarCoder 3B           | 40.00%          | Moderate        |
 
-Fair Evaluation System: Hybrid scoring combining test cases (60%) and code similarity (40%)
+✅ Achieved **95% final accuracy** on basic programming tasks using iterative repair.  
+⚡ Reduced inference time from **15s → 3s** through optimization.  
+🌍 Supports **100+ concurrent users** with minimal latency.  
 
-Production-Ready Platform: Scalable architecture with robust security measures
+---
 
-🛠️ Technology Stack
-Frontend
-Next.js (React framework)
+## 🛠️ Technology Stack
+- **AI/ML**: PyTorch, HuggingFace Transformers, LoRA fine-tuning, RAG, Prompt Engineering  
+- **Backend**: FastAPI (Python), Firebase  
+- **Frontend**: Next.js, Monaco Editor  
+- **Evaluation**: `difflib`, custom test execution pipeline  
+- **Deployment**: Docker, Google Cloud  
 
-TypeScript
+---
 
-Tailwind CSS
+## 🚀 Future Roadmap
+- Adaptive learning based on student performance history  
+- Voice-driven feedback for accessibility  
+- Expansion to more languages (Go, Rust, JavaScript)  
+- LMS integration (Moodle, GitHub Classroom)  
 
-Monaco Editor (VS Code-based code editor)
+---
 
-Backend
-FastAPI (Python web framework)
+## 📚 Academic Impact
+This project contributes to:  
+- **LLM benchmarking for code education**  
+- **Efficient fine-tuning techniques (LoRA) for domain specialization**  
+- **Hybrid code evaluation metrics (tests + similarity)**  
+- **Iterative LLM repair loops for reliable problem solving**  
+- **Real-world deployment of RAG-enhanced educational AI**  
 
-Firebase (Authentication & Firestore)
+---
 
-HuggingFace Transformers (LLM integration)
+## 🙏 Acknowledgments
+Supervised by **Dr. Mohamed Ali Haj Taieb**, DES Research Unit.  
+Developed by **Mohamed Adam Alimi** (INSAT, Tunisia).  
 
-AI/ML Components
-DeepSeek-Coder 1.3B (Primary LLM)
-
-PyTorch (Model execution)
-
-RAG (Retrieval-Augmented Generation)
-
-Prompt Engineering techniques
-
-📊 Performance Highlights
-Model	Size	Pass@1 Accuracy	Inference Speed
-DeepSeek-Coder	1.3B	56.18%	Fast
-CodeLlama	3B	52.00%	Moderate
-StarCoder	3B	40.00%	Moderate
-Achieved 95% accuracy on basic programming problems
-
-Reduced inference time from 15s to 3s through optimization
-
-Supports 100+ concurrent users with minimal latency
+📄 Licensed for academic and research purposes.  
 
 
-🚀 Future Roadmap
-Adaptive learning features based on student performance
-
-Voice-driven feedback for accessibility
-
-Multilingual support (French, Arabic, Spanish)
-
-LMS integration (Moodle, GitHub Classroom)
-
-Expansion to more programming languages
-
-📚 Academic Contribution
-This project represents significant research in:
-
-LLM benchmarking for educational applications
-
-Hybrid code evaluation methodologies
-
-Practical implementation of RAG in education
-
-Balancing model performance with real-world constraints
-
-🙏 Acknowledgments
-Supervised by Dr. Mohamed Ali Haj Taieb at the DES Research Unit, Sfax
-Developed by Mohamed Adam Alimi as part of the IT engineering program at the National Institute of Applied Science and Technology, Tunisia
-
-📄 License
-This project is intended for academic and research purposes. For usage rights, please contact the authors.
-
-For more details, explore the full internship report included in this repository! Contributions and feedback are welcome.
